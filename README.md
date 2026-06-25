@@ -28,7 +28,7 @@ project's `mise.toml`.
    `.github/workflows/`.
 3. For Pages: **Settings → Pages → Source = "GitHub Actions"**.
 
-> Pin to a tag (e.g. `@1` or `@1.0.0`) instead of `@main` once this repo is released.
+> Pin to a tag (e.g. `@1` or `@1.0.0`) instead of `@1.0.1` once this repo is released.
 
 ## Building blocks
 
@@ -49,7 +49,7 @@ tasks. Use it directly when you want your own job/matrix layout.
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: amine2233/ci-shared/actions/mise-run@main
+- uses: amine2233/ci-shared/actions/mise-run@1.0.1
   with:
     tasks: "test"
 ```
@@ -67,7 +67,7 @@ tasks. Use it directly when you want your own job/matrix layout.
 ```yaml
 jobs:
   ci:
-    uses: amine2233/ci-shared/.github/workflows/ci.yml@main
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.0.1
     with:
       enable-coverage: false
 ```
@@ -90,7 +90,7 @@ permissions:
   id-token: write
 jobs:
   docs:
-    uses: amine2233/ci-shared/.github/workflows/pages.yml@main
+    uses: amine2233/ci-shared/.github/workflows/pages.yml@1.0.1
     with:
       main-library-name: CascadeKit
       hosting-base-path: cascade-kit
@@ -113,7 +113,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@main
+    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@1.0.1
     secrets: inherit
 ```
 
@@ -130,7 +130,7 @@ task environment.
 - Composite actions run *inside the caller's job*, so the job provides the
   runner, `permissions`, and `actions/checkout`.
 - Inside the reusable workflows the action is referenced as
-  `amine2233/ci-shared/actions/mise-run@main` (not `./actions/...`): a relative
+  `amine2233/ci-shared/actions/mise-run@1.0.1` (not `./actions/...`): a relative
   `uses:` in a reusable workflow resolves against the *caller's* checkout.
 
 ## Releasing ci-shared itself
