@@ -1,0 +1,143 @@
+# ci-shared
+
+Shared [GitHub Actions](https://docs.github.com/actions) for Swift package
+development, consumed from any package repo
+(e.g. [`cascade-kit`](https://github.com/amine2233/cascade-kit)).
+
+**The CI does not re-implement build/test/docs/release scripts.** Every project
+ships a [`mise.toml`](https://mise.jdx.dev) whose tasks already encode that logic
+(via [`executor`](https://github.com/executor-cli/executor)). The shared
+workflows just install mise and run `mise run <task>`. One source of truth: the
+project's `mise.toml`.
+
+```
+   consumer mise.toml          ci-shared                       runner
+   ────────────────            ─────────                       ──────
+   [tasks.test]        ◀──── mise run test     ◀──── actions/mise-run (jdx/mise-action + mise run)
+   [tasks.lint]        ◀──── mise run lint      ◀──── .github/workflows/ci.yml
+   [tasks.build_…]     ◀──── mise run build_…   ◀──── .github/workflows/pages.yml
+   [tasks.release]     ◀──── mise run release   ◀──── .github/workflows/semantic-release.yml
+```
+
+## Setup a consumer repo
+
+1. Copy [`mise-template.toml`](mise-template.toml) → `mise.toml` and adjust tool
+   versions / library name. Keep the task **names** (`test`, `lint`,
+   `build_documentations`, `release`, …) so the workflows keep working.
+2. Copy the workflows you want from [`examples/`](examples/) into
+   `.github/workflows/`.
+3. For Pages: **Settings → Pages → Source = "GitHub Actions"**.
+
+> Pin to a tag (e.g. `@v1`) instead of `@main` once this repo is released.
+
+## Building blocks
+
+### Composite action — [`actions/mise-run`](actions/mise-run)
+
+Installs mise (provisioning the `[tools]` from `mise.toml`, with caching via
+[`jdx/mise-action`](https://github.com/jdx/mise-action)) and runs one or more
+tasks. Use it directly when you want your own job/matrix layout.
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `tasks` | — (required) | Argument string for `mise run` (e.g. `test`, or `build_documentations macOS --hosting-base-path foo`). Chain several with ` ::: `. |
+| `install-tools` | `true` | Install tools from `mise.toml` first |
+| `mise-version` | `""` | Pin a mise version (empty = latest) |
+| `cache` | `true` | Cache mise-installed tools |
+| `working-directory` | `.` | Where `mise.toml` lives / tasks run |
+| `env` | `""` | `KEY=VALUE` lines exported before the task (used to pass `GITHUB_TOKEN`, etc.) |
+
+```yaml
+- uses: actions/checkout@v4
+- uses: amine2233/ci-shared/actions/mise-run@main
+  with:
+    tasks: "test"
+```
+
+### Reusable workflows
+
+| Workflow | File | Runs |
+| --- | --- | --- |
+| **CI** | [`ci.yml`](.github/workflows/ci.yml) | `mise run lint` + `mise run test` on macOS & Linux (coverage optional) |
+| **Pages** | [`pages.yml`](.github/workflows/pages.yml) | `mise run build_documentations` → upload `./public` → deploy to Pages |
+| **Semantic Release** | [`semantic-release.yml`](.github/workflows/semantic-release.yml) | `mise run release` on full git history |
+
+#### CI
+
+```yaml
+jobs:
+  ci:
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@main
+    with:
+      enable-coverage: false
+```
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `macos-runner` / `linux-runner` | `macos-15` / `ubuntu-latest` | Runner images |
+| `enable-macos` / `enable-linux` / `enable-lint` | `true` | Toggle jobs |
+| `enable-coverage` | `false` | Use `coverage-task` on macOS |
+| `test-task` | `test` | mise task for tests |
+| `coverage-task` | `test-coverage` | mise task for coverage (macOS) |
+| `lint-task` | `lint` | mise task(s) for the lint job |
+
+#### Pages
+
+```yaml
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  docs:
+    uses: amine2233/ci-shared/.github/workflows/pages.yml@main
+    with:
+      main-library-name: CascadeKit
+      hosting-base-path: cascade-kit
+```
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `main-library-name` | — (required) | Passed as `MAIN_LIBRARY_NAME` to the docs task |
+| `hosting-base-path` | — (required) | Passed as `HOSTING_BASE_PATH`; usually the repo name |
+| `platform` | `macOS` | `iOS` or `macOS` |
+| `docs-task` | `build_documentations` | mise task building docs into `./public` |
+| `output-path` | `public` | Directory the task writes into |
+
+#### Semantic Release
+
+```yaml
+jobs:
+  release:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@main
+    secrets: inherit
+```
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `release-task` | `release` | mise task that runs the release |
+| `release-args` | `--write-change-log` | Extra args (e.g. `--dry-run`) |
+
+The workflow exports `GITHUB_TOKEN`/`GH_TOKEN` (from `secrets: inherit`) into the
+task environment.
+
+## Notes
+
+- Composite actions run *inside the caller's job*, so the job provides the
+  runner, `permissions`, and `actions/checkout`.
+- Inside the reusable workflows the action is referenced as
+  `amine2233/ci-shared/actions/mise-run@main` (not `./actions/...`): a relative
+  `uses:` in a reusable workflow resolves against the *caller's* checkout.
+
+## Repository layout
+
+```
+mise-template.toml           # copy to consumer repos as mise.toml (the task source of truth)
+actions/mise-run/            # composite action: setup mise + `mise run <task>`
+.github/workflows/           # reusable workflows that call mise tasks
+examples/                    # caller workflows to copy into consumers
+```

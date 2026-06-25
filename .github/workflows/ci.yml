@@ -1,0 +1,86 @@
+name: CI
+
+# Reusable CI workflow for Swift packages.
+# The build/test/lint logic lives in the project's mise.toml — this workflow
+# only sets up runners and calls `mise run <task>` via the mise-run action.
+#
+# Usage (from a consumer repo):
+#
+#   jobs:
+#     ci:
+#       uses: amine2233/ci-shared/.github/workflows/ci.yml@main
+
+on:
+  workflow_call:
+    inputs:
+      macos-runner:
+        description: "GitHub-hosted macOS runner image."
+        type: string
+        default: "macos-latest"
+      linux-runner:
+        description: "GitHub-hosted Linux runner image."
+        type: string
+        default: "ubuntu-latest"
+      enable-macos:
+        description: "Run tests on macOS."
+        type: boolean
+        default: true
+      enable-linux:
+        description: "Run tests on Linux."
+        type: boolean
+        default: true
+      enable-lint:
+        description: "Run the lint job."
+        type: boolean
+        default: true
+      enable-coverage:
+        description: "Use the coverage task on macOS instead of the plain test task."
+        type: boolean
+        default: false
+      test-task:
+        description: "mise task that runs the tests."
+        type: string
+        default: "test"
+      coverage-task:
+        description: "mise task that runs tests with coverage (macOS)."
+        type: string
+        default: "test-coverage"
+      lint-task:
+        description: "mise task(s) for the lint job (use ' ::: ' to chain several)."
+        type: string
+        default: "lint"
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    if: ${{ inputs.enable-lint }}
+    name: Lint
+    runs-on: ${{ inputs.macos-runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.lint-task }}
+
+  macos:
+    if: ${{ inputs.enable-macos }}
+    name: Test (macOS)
+    runs-on: ${{ inputs.macos-runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.enable-coverage && inputs.coverage-task || inputs.test-task }}
+
+  linux:
+    if: ${{ inputs.enable-linux }}
+    name: Test (Linux)
+    runs-on: ${{ inputs.linux-runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.test-task }}

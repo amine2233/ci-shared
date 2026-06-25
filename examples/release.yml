@@ -1,0 +1,19 @@
+# Copy into the consumer repo at: .github/workflows/release.yml
+# Requires a mise.toml with a `release` task (see mise-template.toml).
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@main
+    with:
+      release-args: "--write-change-log"
+    secrets: inherit

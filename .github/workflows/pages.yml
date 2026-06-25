@@ -1,0 +1,89 @@
+name: Pages
+
+# Reusable workflow that builds DocC documentation via the project's mise
+# `build_documentations` task (output: ./public) and deploys it to GitHub Pages.
+#
+# One-time setup in the consumer repo:
+#   Settings → Pages → Source = "GitHub Actions".
+#
+# Usage (from a consumer repo):
+#
+#   jobs:
+#     docs:
+#       permissions:
+#         contents: read
+#         pages: write
+#         id-token: write
+#       uses: amine2233/ci-shared/.github/workflows/pages.yml@main
+#       with:
+#         main-library-name: CascadeKit
+#         hosting-base-path: cascade-kit
+
+on:
+  workflow_call:
+    inputs:
+      main-library-name:
+        description: "Main package library name (passed to the docs task as MAIN_LIBRARY_NAME)."
+        type: string
+        required: true
+      hosting-base-path:
+        description: "Base path the docs are hosted under (usually the repo name)."
+        type: string
+        required: true
+      platform:
+        description: "Platform argument for the docs task (iOS | macOS)."
+        type: string
+        default: "macOS"
+      macos-runner:
+        description: "macOS runner image used to build the documentation."
+        type: string
+        default: "macos-latest"
+      docs-task:
+        description: "mise task that builds the documentation into ./public."
+        type: string
+        default: "build_documentations"
+      output-path:
+        description: "Directory the docs task writes into."
+        type: string
+        default: "public"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build DocC
+    runs-on: ${{ inputs.macos-runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build documentation
+        uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.docs-task }} ${{ inputs.platform }} --hosting-base-path ${{ inputs.hosting-base-path }} --main-library-name ${{ inputs.main-library-name }}
+          env: |
+            HOSTING_BASE_PATH=${{ inputs.hosting-base-path }}
+            MAIN_LIBRARY_NAME=${{ inputs.main-library-name }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.output-path }}
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

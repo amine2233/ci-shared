@@ -1,0 +1,33 @@
+# Example: use the mise-run composite action directly (instead of the reusable
+# workflows) when you want full control over jobs, matrix and runners.
+# Copy into the consumer repo at: .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          # Coverage only on macOS (needs xcrun); plain tests elsewhere.
+          tasks: ${{ matrix.os == 'macos-15' && 'test-coverage' || 'test' }}
+
+  lint:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: "lint"

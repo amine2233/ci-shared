@@ -1,0 +1,18 @@
+# Copy into the consumer repo at: .github/workflows/ci.yml
+# Requires a mise.toml with `test` and `lint` tasks (see mise-template.toml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@main
+    with:
+      enable-macos: true
+      enable-linux: true
+      enable-lint: true
+      enable-coverage: false

@@ -1,0 +1,22 @@
+# Copy into the consumer repo at: .github/workflows/pages.yml
+# Requires a mise.toml with a `build_documentations` task (see mise-template.toml)
+# and: Settings → Pages → Source = "GitHub Actions".
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  docs:
+    uses: amine2233/ci-shared/.github/workflows/pages.yml@main
+    with:
+      main-library-name: CascadeKit
+      hosting-base-path: cascade-kit
+      platform: macOS

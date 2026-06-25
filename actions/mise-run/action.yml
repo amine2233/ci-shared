@@ -1,0 +1,61 @@
+name: "Mise Run"
+description: "Install mise (provisioning the tools + tasks from the project's mise.toml) and run one or more mise tasks."
+
+inputs:
+  tasks:
+    description: "Argument string passed to `mise run`, e.g. 'test' or 'build_documentations macOS --hosting-base-path foo'. Separate multiple tasks with ' ::: '."
+    required: true
+  install-tools:
+    description: "Install tools declared in mise.toml before running ('true'/'false')."
+    required: false
+    default: "true"
+  mise-version:
+    description: "Pin a mise version (empty = latest)."
+    required: false
+    default: ""
+  cache:
+    description: "Cache mise-installed tools ('true'/'false')."
+    required: false
+    default: "true"
+  experimental:
+    description: "Enable mise experimental features ('true'/'false')."
+    required: false
+    default: "false"
+  working-directory:
+    description: "Directory containing mise.toml / where tasks run."
+    required: false
+    default: "."
+  env:
+    description: "Optional KEY=VALUE lines (one per line) exported before running the task(s)."
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup mise
+      uses: jdx/mise-action@v2
+      with:
+        version: ${{ inputs.mise-version }}
+        install: ${{ inputs.install-tools }}
+        cache: ${{ inputs.cache }}
+        experimental: ${{ inputs.experimental }}
+        working_directory: ${{ inputs.working-directory }}
+
+    - name: Run mise task(s)
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        MISE_TASKS: ${{ inputs.tasks }}
+        EXTRA_ENV: ${{ inputs.env }}
+      run: |
+        set -euo pipefail
+        if [ -n "${EXTRA_ENV}" ]; then
+          while IFS= read -r line; do
+            [ -z "${line}" ] && continue
+            export "${line?}"
+          done <<< "${EXTRA_ENV}"
+        fi
+        echo "::group::mise run ${MISE_TASKS}"
+        mise run ${MISE_TASKS}
+        echo "::endgroup::"

@@ -1,0 +1,68 @@
+name: Semantic Release
+
+# Reusable workflow that runs the project's mise `release` task
+# (executor → semantic-release) to version, changelog, tag and publish a
+# GitHub release from Conventional Commits.
+#
+# Usage (from a consumer repo):
+#
+#   jobs:
+#     release:
+#       permissions:
+#         contents: write
+#         issues: write
+#         pull-requests: write
+#       uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@main
+#       secrets: inherit
+
+on:
+  workflow_call:
+    inputs:
+      release-task:
+        description: "mise task that runs the release."
+        type: string
+        default: "release"
+      release-args:
+        description: "Extra args appended to the release task (e.g. '--write-change-log' or '--dry-run')."
+        type: string
+        default: "--write-change-log"
+      runner:
+        description: "Runner image for the release job."
+        type: string
+        default: "ubuntu-latest"
+    secrets:
+      GH_TOKEN:
+        description: "Token with `contents: write`. Defaults to GITHUB_TOKEN via secrets: inherit."
+        required: false
+      NPM_TOKEN:
+        description: "npm token (only if publishing to npm)."
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Semantic Release
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Release
+        uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.release-task }} ${{ inputs.release-args }}
+          env: |
+            GITHUB_TOKEN=${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+            GH_TOKEN=${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
