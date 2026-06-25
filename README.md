@@ -133,11 +133,29 @@ task environment.
   `amine2233/ci-shared/actions/mise-run@main` (not `./actions/...`): a relative
   `uses:` in a reusable workflow resolves against the *caller's* checkout.
 
+## Releasing ci-shared itself
+
+This repo versions itself with semantic-release so consumers can pin a stable
+ref. The [`mise.toml`](mise.toml) defines a `semantic-release` task; the manual
+[`Release`](.github/workflows/release.yml) workflow (`workflow_dispatch`) runs it:
+
+- **Actions → Release → Run workflow** (optionally tick *dry-run* to preview).
+- It cuts a `vX.Y.Z` tag + GitHub release from Conventional Commits, then moves
+  the major tag (`vN`) so callers can pin `@v1` and keep getting patches.
+
+```bash
+mise run semantic-release --dry-run   # preview locally
+```
+
 ## Repository layout
 
 ```
 mise-template.toml           # copy to consumer repos as mise.toml (the task source of truth)
+mise.toml                    # tasks for releasing THIS repo (semantic-release)
+.releaserc.json              # semantic-release config for THIS repo
 actions/mise-run/            # composite action: setup mise + `mise run <task>`
-.github/workflows/           # reusable workflows that call mise tasks
+.github/workflows/
+  ci.yml pages.yml semantic-release.yml   # reusable workflows for consumers
+  release.yml                             # manual workflow that releases ci-shared itself
 examples/                    # caller workflows to copy into consumers
 ```

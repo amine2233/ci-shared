@@ -1,0 +1,52 @@
+name: Release
+
+# Manually-triggered release for THIS repository (ci-shared).
+# Runs the `semantic-release` mise task to cut a version tag + GitHub release,
+# then (optionally) moves the major tag (vN) so consumers can pin `@v1`.
+#
+# Trigger from the Actions tab → "Release" → "Run workflow".
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Preview the release without publishing (no tag, no commit, no GitHub Release)."
+        type: boolean
+        default: false
+      move-major-tag:
+        description: "Move the major version tag (e.g. v1) to the new release."
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Semantic Release (manual)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semantic release
+        uses: ./actions/mise-run
+        with:
+          tasks: semantic-release ${{ inputs.dry-run && '--dry-run' || '' }}
+          env: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move major version tag
+        if: ${{ !inputs.dry-run && inputs.move-major-tag }}
+        uses: ./actions/mise-run
+        with:
+          tasks: release-major-tag

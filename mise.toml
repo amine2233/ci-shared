@@ -1,0 +1,40 @@
+# mise tasks for the ci-shared repository itself (NOT the template that
+# consumers copy — that is `mise-template.toml`). This repo is released with
+# semantic-release so it can publish version tags (v1.2.3) for consumers to pin.
+
+[tools]
+node = "20"
+
+[tasks.semantic-release]
+description = "Run semantic-release to version, changelog, tag and publish this repository."
+usage = '''
+flag "-d --dry-run" help="Preview the release without publishing (no tag, no commit, no GitHub Release)"
+'''
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+dry_run_opt=""
+if [[ "${usage_dry_run:-}" == "true" ]]; then
+    dry_run_opt="--dry-run"
+fi
+
+npx --yes \
+    -p semantic-release \
+    -p @semantic-release/changelog \
+    -p @semantic-release/git \
+    -p conventional-changelog-conventionalcommits \
+    semantic-release $dry_run_opt
+'''
+
+[tasks.release-major-tag]
+description = "Move the major version tag (e.g. v1) to the latest release, so consumers can pin '@v1'."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+latest="$(git describe --tags --abbrev=0)"
+major="${latest%%.*}"          # v1.2.3 -> v1
+echo "Pointing ${major} at ${latest}"
+git tag -f "${major}" "${latest}"
+git push -f origin "${major}"
+'''
