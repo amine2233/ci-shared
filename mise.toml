@@ -22,19 +22,11 @@ fi
 npx --yes \
     -p semantic-release \
     -p @semantic-release/changelog \
+    -p @semantic-release/exec \
     -p @semantic-release/git \
     -p conventional-changelog-conventionalcommits \
     semantic-release $dry_run_opt
 '''
-
-[tasks.release-major-tag]
-description = "Move the major version tag (e.g. 1) to the latest release, so consumers can pin '@1'."
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-latest="$(git describe --tags --abbrev=0)"
-major="${latest%%.*}"          # 1.2.3 -> 1
-echo "Pointing ${major} at ${latest}"
-git tag -f "${major}" "${latest}"
-git push -f origin "${major}"
-'''
+# Short version tag aliases (1, 1.2) and README/examples bumping are handled
+# automatically during the release via .releaserc.json (@semantic-release/exec
+# → bumpversion.sh / post-release.sh).

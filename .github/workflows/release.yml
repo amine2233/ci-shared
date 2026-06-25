@@ -1,8 +1,9 @@
 name: Release
 
 # Manually-triggered release for THIS repository (ci-shared).
-# Runs the `semantic-release` mise task to cut a version tag + GitHub release,
-# then (optionally) moves the major tag (N) so consumers can pin `@1`.
+# Runs the `semantic-release` mise task, which (via .releaserc.json) cuts a
+# version tag + GitHub release, bumps README/examples refs (bumpversion.sh) and
+# moves the short tags N and N.M (post-release.sh) so consumers can pin `@1`/`@1.2`.
 #
 # Trigger from the Actions tab → "Release" → "Run workflow".
 
@@ -13,10 +14,6 @@ on:
         description: "Preview the release without publishing (no tag, no commit, no GitHub Release)."
         type: boolean
         default: false
-      move-major-tag:
-        description: "Move the major version tag (e.g. 1) to the new release."
-        type: boolean
-        default: true
 
 permissions:
   contents: write
@@ -44,9 +41,3 @@ jobs:
           env: |
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-
-      - name: Move major version tag
-        if: ${{ !inputs.dry-run && inputs.move-major-tag }}
-        uses: ./actions/mise-run
-        with:
-          tasks: release-major-tag
