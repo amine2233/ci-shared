@@ -2,7 +2,7 @@ name: Release
 
 # Manually-triggered release for THIS repository (ci-shared).
 # Runs the `semantic-release` mise task to cut a version tag + GitHub release,
-# then (optionally) moves the major tag (vN) so consumers can pin `@v1`.
+# then (optionally) moves the major tag (N) so consumers can pin `@1`.
 #
 # Trigger from the Actions tab → "Release" → "Run workflow".
 
@@ -14,7 +14,7 @@ on:
         type: boolean
         default: false
       move-major-tag:
-        description: "Move the major version tag (e.g. v1) to the new release."
+        description: "Move the major version tag (e.g. 1) to the new release."
         type: boolean
         default: true
 

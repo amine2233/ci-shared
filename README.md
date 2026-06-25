@@ -28,7 +28,7 @@ project's `mise.toml`.
    `.github/workflows/`.
 3. For Pages: **Settings → Pages → Source = "GitHub Actions"**.
 
-> Pin to a tag (e.g. `@v1`) instead of `@main` once this repo is released.
+> Pin to a tag (e.g. `@1` or `@1.0.0`) instead of `@main` once this repo is released.
 
 ## Building blocks
 
@@ -140,8 +140,9 @@ ref. The [`mise.toml`](mise.toml) defines a `semantic-release` task; the manual
 [`Release`](.github/workflows/release.yml) workflow (`workflow_dispatch`) runs it:
 
 - **Actions → Release → Run workflow** (optionally tick *dry-run* to preview).
-- It cuts a `vX.Y.Z` tag + GitHub release from Conventional Commits, then moves
-  the major tag (`vN`) so callers can pin `@v1` and keep getting patches.
+- It cuts a `X.Y.Z` tag (no `v` prefix) + GitHub release from Conventional
+  Commits, then moves the major tag (`N`) so callers can pin `@1` and keep
+  getting patches.
 
 ```bash
 mise run semantic-release --dry-run   # preview locally

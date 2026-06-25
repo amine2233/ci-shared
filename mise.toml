@@ -1,6 +1,6 @@
 # mise tasks for the ci-shared repository itself (NOT the template that
 # consumers copy — that is `mise-template.toml`). This repo is released with
-# semantic-release so it can publish version tags (v1.2.3) for consumers to pin.
+# semantic-release so it can publish version tags (1.2.3) for consumers to pin.
 
 [tools]
 node = "20"
@@ -28,12 +28,12 @@ npx --yes \
 '''
 
 [tasks.release-major-tag]
-description = "Move the major version tag (e.g. v1) to the latest release, so consumers can pin '@v1'."
+description = "Move the major version tag (e.g. 1) to the latest release, so consumers can pin '@1'."
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 latest="$(git describe --tags --abbrev=0)"
-major="${latest%%.*}"          # v1.2.3 -> v1
+major="${latest%%.*}"          # 1.2.3 -> 1
 echo "Pointing ${major} at ${latest}"
 git tag -f "${major}" "${latest}"
 git push -f origin "${major}"
