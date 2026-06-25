@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: amine2233/ci-shared/actions/mise-run@1.0.0
+      - uses: amine2233/ci-shared/actions/mise-run@1.0.1
         with:
           # Coverage only on macOS (needs xcrun); plain tests elsewhere.
           tasks: ${{ matrix.os == 'macos-15' && 'test-coverage' || 'test' }}
@@ -28,6 +28,6 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - uses: amine2233/ci-shared/actions/mise-run@1.0.0
+      - uses: amine2233/ci-shared/actions/mise-run@1.0.1
         with:
           tasks: "lint"

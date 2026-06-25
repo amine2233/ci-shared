@@ -10,7 +10,7 @@ on:
 
 jobs:
   ci:
-    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.0.0
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.0.1
     with:
       enable-macos: true
       enable-linux: true

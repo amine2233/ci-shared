@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   docs:
-    uses: amine2233/ci-shared/.github/workflows/pages.yml@1.0.0
+    uses: amine2233/ci-shared/.github/workflows/pages.yml@1.0.1
     with:
       main-library-name: CascadeKit
       hosting-base-path: cascade-kit
