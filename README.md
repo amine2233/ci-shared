@@ -140,9 +140,12 @@ ref. The [`mise.toml`](mise.toml) defines a `semantic-release` task; the manual
 [`Release`](.github/workflows/release.yml) workflow (`workflow_dispatch`) runs it:
 
 - **Actions → Release → Run workflow** (optionally tick *dry-run* to preview).
-- It cuts a `X.Y.Z` tag (no `v` prefix) + GitHub release from Conventional
-  Commits, then moves the major tag (`N`) so callers can pin `@1` and keep
-  getting patches.
+- semantic-release (config in [`.releaserc.json`](.releaserc.json)) then:
+  cuts a `X.Y.Z` tag (no `v` prefix) + GitHub release from Conventional Commits;
+  bumps the pinned `amine2233/ci-shared@<version>` refs in the README and
+  [`examples/`](examples/) via [`bumpversion.sh`](bumpversion.sh); and moves the
+  short tags `N` / `N.M` via [`post-release.sh`](post-release.sh) so callers can
+  pin `@1` (latest 1.x) or `@1.2` (latest 1.2.x) and keep getting updates.
 
 ```bash
 mise run semantic-release --dry-run   # preview locally
