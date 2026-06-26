@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/amine2233/ci-shared/compare/1.0.1...1.0.2) (2026-06-26)
+
+### Bug Fixes
+
+* add git commit info to push files when create a release ([#2](https://github.com/amine2233/ci-shared/issues/2)) ([c869207](https://github.com/amine2233/ci-shared/commit/c869207e12665d19a2b15937cc0f23c7d4d4906f))
+
 ## [1.0.1](https://github.com/amine2233/ci-shared/compare/1.0.0...1.0.1) (2026-06-25)
 
 ### Bug Fixes
