@@ -125,6 +125,56 @@ jobs:
 The workflow exports `GITHUB_TOKEN`/`GH_TOKEN` (from `secrets: inherit`) into the
 task environment.
 
+##### Repo setup: let the release push to a protected `main`
+
+semantic-release commits the `CHANGELOG.md` / `README.md` bump **back to the
+release branch** and pushes tags. If `main` is protected (require a pull
+request, or "do not allow bypassing"), the push is rejected:
+
+```
+remote: error: GH006: Protected branch update failed for refs/heads/main.
+remote: - Changes must be made through a pull request.
+ ! [remote rejected] HEAD -> main (protected branch hook declined)
+```
+
+The default `GITHUB_TOKEN` (acting as `github-actions[bot]`) **cannot** bypass a
+"require pull request" rule. Pick one:
+
+1. **Add a bypass actor (recommended).** In the branch ruleset/protection for
+   `main`, add the identity that runs the release to the bypass list:
+   - **Rulesets** (*Settings → Rules → Rulesets → your `main` ruleset →
+     Bypass list*): add **Repository admin**, or the GitHub App / user whose
+     token you use below.
+   - **Classic protection** (*Settings → Branches → main*): enable
+     **Allow specified actors to bypass required pull requests** and add that
+     actor.
+2. **Use a token that owns the bypass.** The built-in `GITHUB_TOKEN` can't be
+   added to a bypass list, so provide your own and pass it as `GH_TOKEN`:
+   - a **fine-grained PAT** (or classic PAT with `repo`) from an account in the
+     bypass list, **or** a **GitHub App** installation token (recommended for
+     orgs);
+   - store it as a repo secret (e.g. `RELEASE_TOKEN`) and wire it in:
+
+     ```yaml
+     jobs:
+       release:
+         permissions:
+           contents: write
+           issues: write
+           pull-requests: write
+         uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@1.0.1
+         secrets:
+           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+     ```
+
+> The git identity is set via `GIT_AUTHOR_*` / `GIT_COMMITTER_*` env in the
+> workflow, so the `Author identity unknown` / `empty ident name` error is
+> already handled — this section is only about the **push permission**.
+>
+> The `git: 'credential-cache --timeout 3600' is not a git command` line in the
+> log is a harmless warning (that credential helper isn't installed on the
+> runner), not the cause of the failure.
+
 ## Notes
 
 - Composite actions run *inside the caller's job*, so the job provides the
