@@ -90,6 +90,11 @@ run = "executor linting code ./Sources --reporter console"
 description = "Lint the latest commit title against the project's convention."
 run = "executor check-ci commit-title"
 
+# Used by CI's title-check job; GITHUB_TOKEN / COMMENT_TARGET come from the workflow.
+[tasks.check_merge_request_title]
+description = "Lint the pull request title and post the result as a PR comment."
+run = 'executor merge-request-title --post-comment --comment-token "${GITHUB_TOKEN?}" --comment-target "${COMMENT_TARGET?}"'
+
 # Convenience aggregate used by CI's lint job: `mise run lint`.
 [tasks.lint]
 description = "Run all static checks (code + documentation)."

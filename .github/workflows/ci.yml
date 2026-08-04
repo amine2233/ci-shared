@@ -49,6 +49,18 @@ on:
         description: "mise task(s) for the lint job (use ' ::: ' to chain several)."
         type: string
         default: "lint"
+      enable-title-check:
+        description: "Run the merge/pull request title check (pull requests only)."
+        type: boolean
+        default: false
+      title-check-task:
+        description: "mise task that checks the pull request title."
+        type: string
+        default: "check_merge_request_title"
+      comment-target:
+        description: "Target the title-check comment is posted on (default: the pull request number)."
+        type: string
+        default: ""
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -64,6 +76,22 @@ jobs:
       - uses: amine2233/ci-shared/actions/mise-run@main
         with:
           tasks: ${{ inputs.lint-task }}
+
+  title-check:
+    if: ${{ inputs.enable-title-check && github.event_name == 'pull_request' }}
+    name: Merge request title
+    runs-on: ${{ inputs.linux-runner }}
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.title-check-task }}
+          env: |
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            COMMENT_TARGET=${{ inputs.comment-target || github.event.pull_request.number }}
 
   macos:
     if: ${{ inputs.enable-macos }}
