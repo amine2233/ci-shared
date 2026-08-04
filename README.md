@@ -81,6 +81,12 @@ jobs:
 | `test-task` | `test` | mise task for tests |
 | `coverage-task` | `test-coverage` | mise task for coverage (macOS) |
 | `lint-task` | `lint` | mise task(s) for the lint job |
+| `enable-title-check` | `false` | Check the PR title on Linux (pull requests only) |
+| `title-check-task` | `check_merge_request_title` | mise task for the title check |
+| `comment-target` | `""` | Comment target (default: the PR number) |
+
+The title check posts its result as a PR comment, so the calling job needs
+`permissions: pull-requests: write`.
 
 #### Pages
 
