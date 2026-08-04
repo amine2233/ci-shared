@@ -1,0 +1,178 @@
+name: Release Binaries
+
+# Reusable workflow: cut the release with the project's mise `release` task
+# (semantic-release → tag + GitHub release, same as `semantic-release.yml`),
+# then build the binary on Linux + macOS and attach one tarball per target.
+#
+# Assets are named `<binary-name>-<target>.tar.gz`, e.g.
+#   mytool-darwin-arm64.tar.gz   mytool-linux-x86_64.tar.gz
+#
+# Pass `tag:` to attach binaries to an existing tag instead of releasing.
+#
+# Usage (from a consumer repo):
+#
+#   jobs:
+#     binaries:
+#       permissions:
+#         contents: write
+#         issues: write
+#         pull-requests: write
+#       uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@main
+#       with:
+#         binary-name: mytool
+#       secrets: inherit
+
+on:
+  workflow_call:
+    inputs:
+      binary-name:
+        description: "Name of the built executable; also the asset prefix."
+        type: string
+        required: true
+      tag:
+        description: "Existing tag to attach binaries to. Empty = run the release task and use the tag it creates."
+        type: string
+        default: ""
+      release-task:
+        description: "mise task that cuts the release."
+        type: string
+        default: "release"
+      release-args:
+        description: "Extra args appended to the release task."
+        type: string
+        default: "--write-change-log"
+      build-task:
+        description: "mise task that builds the release binary."
+        type: string
+        default: "build-release"
+      binary-dir:
+        description: "Directory the build task writes the executable into (matrix `dir` wins)."
+        type: string
+        default: ".build/release"
+      enable-linux:
+        description: "Build the `linux-*` targets."
+        type: boolean
+        default: true
+      enable-macos:
+        description: "Build the `darwin-*` targets."
+        type: boolean
+        default: true
+      targets:
+        description: "JSON list of {runner, target, args?, dir?} objects to build."
+        type: string
+        default: >-
+          [{"runner": "macos-latest", "target": "darwin-arm64", "args": "--arch arm64", "dir": ".build/arm64-apple-macosx/release"},
+           {"runner": "macos-latest", "target": "darwin-amd64", "args": "--arch x86_64", "dir": ".build/x86_64-apple-macosx/release"},
+           {"runner": "ubuntu-latest", "target": "linux-x86_64"},
+           {"runner": "ubuntu-24.04-arm", "target": "linux-arm64"}]
+    secrets:
+      GH_TOKEN:
+        description: "Token with `contents: write`. Defaults to GITHUB_TOKEN."
+        required: false
+      NPM_TOKEN:
+        description: "npm token (only if the release task publishes to npm)."
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-binaries-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      targets: ${{ steps.targets.outputs.json }}
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Tag before release
+        id: before
+        run: echo "tag=$(git describe --tags --abbrev=0 --match '*.*.*' 2>/dev/null || true)" >> "$GITHUB_OUTPUT"
+
+      - name: Release
+        if: inputs.tag == ''
+        uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.release-task }} ${{ inputs.release-args }}
+          env: |
+            GITHUB_TOKEN=${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+            GH_TOKEN=${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+            GIT_AUTHOR_NAME=github-actions[bot]
+            GIT_AUTHOR_EMAIL=41898282+github-actions[bot]@users.noreply.github.com
+            GIT_COMMITTER_NAME=github-actions[bot]
+            GIT_COMMITTER_EMAIL=41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Resolve released tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          BEFORE: ${{ steps.before.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            git fetch --tags --force --quiet
+            tag=$(git describe --tags --abbrev=0 --match '*.*.*' 2>/dev/null || true)
+            if [ "$tag" = "$BEFORE" ]; then
+              echo "No new version released — skipping binaries."
+              tag=""
+            fi
+          fi
+          echo "Releasing binaries for: ${tag:-<none>}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Select targets
+        id: targets
+        env:
+          TARGETS: ${{ inputs.targets }}
+          LINUX: ${{ inputs.enable-linux }}
+          MACOS: ${{ inputs.enable-macos }}
+        run: |
+          set -euo pipefail
+          json=$(jq -c --argjson linux "$LINUX" --argjson macos "$MACOS" \
+            '[.[] | select(if (.target | startswith("linux")) then $linux else $macos end)]' <<< "$TARGETS")
+          echo "$json"
+          echo "json=$json" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: release
+    if: needs.release.outputs.tag != '' && needs.release.outputs.targets != '[]'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.release.outputs.targets) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: amine2233/ci-shared/actions/mise-run@main
+        with:
+          tasks: ${{ inputs.build-task }} ${{ matrix.args }}
+
+      - name: Package and upload
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release.outputs.tag }}
+          BINARY: ${{ inputs.binary-name }}
+          BINARY_DIR: ${{ matrix.dir || inputs.binary-dir }}
+          ASSET: ${{ inputs.binary-name }}-${{ matrix.target }}.tar.gz
+        run: |
+          set -euo pipefail
+          tar -czf "$ASSET" -C "$BINARY_DIR" "$BINARY"
+          gh release upload "$TAG" "$ASSET" --clobber

@@ -61,6 +61,7 @@ tasks. Use it directly when you want your own job/matrix layout.
 | **CI** | [`ci.yml`](.github/workflows/ci.yml) | `mise run lint` + `mise run test` on macOS & Linux (coverage optional) |
 | **Pages** | [`pages.yml`](.github/workflows/pages.yml) | `mise run build_documentations` → upload `./public` → deploy to Pages |
 | **Semantic Release** | [`semantic-release.yml`](.github/workflows/semantic-release.yml) | `mise run release` on full git history |
+| **Release Binaries** | [`release-binaries.yml`](.github/workflows/release-binaries.yml) | `mise run release`, then `mise run build-release` on 4 targets → upload `.tar.gz` assets to that release |
 
 #### CI
 
@@ -124,6 +125,48 @@ jobs:
 
 The workflow exports `GITHUB_TOKEN`/`GH_TOKEN` (from `secrets: inherit`) into the
 task environment.
+
+#### Release Binaries
+
+```yaml
+on:
+  push:
+    branches: [main]
+jobs:
+  binaries:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.0.2
+    with:
+      binary-name: mytool
+    secrets: inherit
+```
+
+Semantic Release + binaries in one workflow: it runs the same `mise run release`
+task as [`semantic-release.yml`](#semantic-release) (which cuts the tag and the
+GitHub release), then builds on each target and uploads
+`mytool-darwin-amd64.tar.gz`, `mytool-darwin-arm64.tar.gz`,
+`mytool-linux-x86_64.tar.gz`, `mytool-linux-arm64.tar.gz` into it. If the commits
+produce no new version, the build jobs are skipped. Pass `tag:` to attach
+binaries to an existing tag instead of releasing — useful to re-run a failed
+upload.
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `binary-name` | — (required) | Executable name; also the asset prefix |
+| `tag` | `""` | Attach to this existing tag instead of cutting a release |
+| `release-task` / `release-args` | `release` / `--write-change-log` | Same as Semantic Release |
+| `build-task` | `build-release` | mise task building the release binary |
+| `enable-linux` / `enable-macos` | `true` | Toggle the `linux-*` / `darwin-*` targets |
+| `binary-dir` | `.build/release` | Directory the task writes the executable into (matrix `dir` wins) |
+| `targets` | 4 entries (see workflow) | JSON list of `{runner, target, args?, dir?}` objects |
+
+Both macOS assets are built on `macos-latest` (Apple Silicon): `darwin-amd64`
+cross-compiles with `--arch x86_64`, which SPM emits into
+`.build/x86_64-apple-macosx/release`. The Intel `macos-13` image was retired in
+December 2025; use `macos-15-intel` in `targets` if you need a native Intel build.
 
 ##### Repo setup: let the release push to a protected `main`
 

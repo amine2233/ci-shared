@@ -30,6 +30,17 @@ executor test report --report-for-type swift ./
 executor coverage swift --verbose
 '''
 
+[tasks.build-release]
+description = "Build the release binary (used by the release-binaries workflow)."
+usage = '''
+flag "--arch <arch>" help="Target architecture, e.g. arm64 or x86_64 (empty = host)." default=""
+'''
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+swift build -c release --disable-sandbox ${usage_arch:+--arch "$usage_arch"}
+'''
+
 [tasks.release]
 description = "Run semantic-release. Use --dry-run to preview without publishing."
 usage = '''
