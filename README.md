@@ -76,7 +76,7 @@ jobs:
 | Input | Default | Description |
 | --- | --- | --- |
 | `macos-runner` / `linux-runner` | `macos-15` / `ubuntu-latest` | Runner images |
-| `enable-macos` / `enable-linux` / `enable-lint` | `true` | Toggle jobs |
+| `enable-macos` / `enable-linux` / `enable-lint` | `true` | Toggle jobs (lint runs on pull requests only) |
 | `enable-coverage` | `false` | Use `coverage-task` on macOS |
 | `test-task` | `test` | mise task for tests |
 | `coverage-task` | `test-coverage` | mise task for coverage (macOS) |
