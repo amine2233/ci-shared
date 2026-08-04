@@ -1,3 +1,14 @@
+## [1.1.0](https://github.com/amine2233/ci-shared/compare/1.0.2...1.1.0) (2026-08-04)
+
+### Features
+
+* add binaries when release ([#3](https://github.com/amine2233/ci-shared/issues/3)) ([e0503f4](https://github.com/amine2233/ci-shared/commit/e0503f4a3cad30f2163a5851174a85af81e8d450))
+* add check commit title inside pull-request ([#5](https://github.com/amine2233/ci-shared/issues/5)) ([dcfdc29](https://github.com/amine2233/ci-shared/commit/dcfdc2965bc1f50027d9cf798bc48e11c932ccda))
+
+### Bug Fixes
+
+* run lint only on pull-request ([#4](https://github.com/amine2233/ci-shared/issues/4)) ([d11cbf7](https://github.com/amine2233/ci-shared/commit/d11cbf7bb4400e5df6c4e20c7b3beb97048c997e))
+
 ## [1.0.2](https://github.com/amine2233/ci-shared/compare/1.0.1...1.0.2) (2026-06-26)
 
 ### Bug Fixes
