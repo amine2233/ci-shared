@@ -1,0 +1,26 @@
+# Copy into the consumer repo at: .github/workflows/release-binaries.yml
+# Requires a mise.toml with `release` and `build-release` tasks (see mise-template.toml).
+# Replaces release.yml: it runs the same release task, then attaches the binaries.
+name: Release Binaries
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to attach binaries to (empty = cut a new release)."
+        type: string
+        default: ""
+
+jobs:
+  binaries:
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.0.2
+    with:
+      binary-name: mytool
+      tag: ${{ inputs.tag }}
+    secrets: inherit
