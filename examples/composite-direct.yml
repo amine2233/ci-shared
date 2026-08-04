@@ -25,6 +25,7 @@ jobs:
           tasks: ${{ matrix.os == 'macos-15' && 'test-coverage' || 'test' }}
 
   lint:
+    if: github.event_name == 'pull_request'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4

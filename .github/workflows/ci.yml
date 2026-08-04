@@ -30,7 +30,7 @@ on:
         type: boolean
         default: true
       enable-lint:
-        description: "Run the lint job."
+        description: "Run the lint job (pull requests only)."
         type: boolean
         default: true
       enable-coverage:
@@ -56,7 +56,7 @@ concurrency:
 
 jobs:
   lint:
-    if: ${{ inputs.enable-lint }}
+    if: ${{ inputs.enable-lint && github.event_name == 'pull_request' }}
     name: Lint
     runs-on: ${{ inputs.macos-runner }}
     steps:
