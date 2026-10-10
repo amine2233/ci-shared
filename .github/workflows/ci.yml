@@ -89,8 +89,11 @@ jobs:
       - uses: amine2233/ci-shared/actions/mise-run@main
         with:
           tasks: ${{ inputs.title-check-task }}
+          # TODO: remove CI_MERGE_REQUEST_TITLE once no project uses executor < 0.28.5
           env: |
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+            GITHUB_PULL_REQUEST_TITLE=${{ github.event.pull_request.title }}
+            CI_MERGE_REQUEST_TITLE=${{ github.event.pull_request.title }}
             COMMENT_TARGET=${{ inputs.comment-target || github.event.pull_request.number }}
 
   macos:
