@@ -1,3 +1,9 @@
+## [1.1.1](https://github.com/amine2233/ci-shared/compare/1.1.0...1.1.1) (2026-10-10)
+
+### Bug Fixes
+
+* **ci:** pass pull request title to title check task ([#6](https://github.com/amine2233/ci-shared/issues/6)) ([be6252e](https://github.com/amine2233/ci-shared/commit/be6252eceb2462becd19d7f31d97e6f1314be20d))
+
 ## [1.1.0](https://github.com/amine2233/ci-shared/compare/1.0.2...1.1.0) (2026-08-04)
 
 ### Features
