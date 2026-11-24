@@ -29,10 +29,72 @@ inputs:
     description: "Optional KEY=VALUE lines (one per line) exported before running the task(s)."
     required: false
     default: ""
+  linux-swift-deps:
+    description: "On Linux, apt-install the system libraries the swift.org toolchain needs (libcurl, libxml2, libstdc++/libgcc dev, ...) ('true'/'false')."
+    required: false
+    default: "true"
+  linux-extra-packages:
+    description: "Extra apt packages (space-separated) to install on Linux, e.g. 'libsqlite3-dev libssl-dev'."
+    required: false
+    default: ""
 
 runs:
   using: "composite"
   steps:
+    - name: Install Swift Linux dependencies
+      if: ${{ runner.os == 'Linux' && (inputs.linux-swift-deps == 'true' || inputs.linux-extra-packages != '') }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SWIFT_DEPS: ${{ inputs.linux-swift-deps }}
+        EXTRA_PACKAGES: ${{ inputs.linux-extra-packages }}
+      run: |
+        set -euo pipefail
+        . /etc/os-release
+        echo "Linux: ${PRETTY_NAME:-$ID $VERSION_ID}"
+
+        pkgs=()
+        if [ "${SWIFT_DEPS}" = "true" ]; then
+          # Mirrors swiftlang/swift-docker (<swift>/ubuntu/<version>/Dockerfile).
+          case "${VERSION_ID:-}" in
+            26.04) gcc=15 ;;
+            24.04) gcc=13 ;;
+            22.04) gcc=12 ;;
+            *)     gcc="$(gcc -dumpversion 2>/dev/null | cut -d. -f1 || true)" ;;
+          esac
+          pkgs+=(binutils git unzip gnupg2 libc6-dev libcurl4-openssl-dev libedit2
+                 libpython3-dev libsqlite3-0 libxml2-dev libncurses-dev libz3-dev
+                 pkg-config tzdata zlib1g-dev)
+          [ -n "${gcc}" ] && pkgs+=("libgcc-${gcc}-dev" "libstdc++-${gcc}-dev")
+          # gold was split out of binutils on newer releases; swift still links with it.
+          apt-cache show binutils-gold >/dev/null 2>&1 && pkgs+=(binutils-gold)
+
+          # Swift < 6.4 has no swift.org toolchain for Ubuntu 26.04: fail early with a clear hint.
+          if [ "${VERSION_ID:-}" = "26.04" ] && [ -f mise.toml ]; then
+            want="$(sed -nE 's/^[[:space:]]*"?swift"?[[:space:]]*=[[:space:]]*"([0-9][0-9.]*)".*/\1/p' mise.toml | head -n1)"
+            if [ -n "${want}" ] && [ "$(printf '%s\n' 6.4 "${want}" | sort -V | head -n1)" != "6.4" ]; then
+              echo "::error file=mise.toml::swift ${want} has no Ubuntu 26.04 toolchain on swift.org. Bump to swift >= 6.4 in mise.toml, or set linux-runner: ubuntu-24.04."
+              exit 1
+            fi
+          fi
+        fi
+        # shellcheck disable=SC2206
+        [ -n "${EXTRA_PACKAGES}" ] && pkgs+=(${EXTRA_PACKAGES})
+
+        missing=()
+        for p in "${pkgs[@]}"; do
+          dpkg-query -W -f='${Status}' "$p" 2>/dev/null | grep -q 'install ok installed' || missing+=("$p")
+        done
+        if [ "${#missing[@]}" -eq 0 ]; then
+          echo "All Linux dependencies already installed."
+          exit 0
+        fi
+        echo "::group::apt-get install ${missing[*]}"
+        export DEBIAN_FRONTEND=noninteractive
+        sudo apt-get -q update
+        sudo apt-get -q install -y --no-install-recommends "${missing[@]}"
+        echo "::endgroup::"
+
     - name: Setup mise
       uses: jdx/mise-action@v2
       with:

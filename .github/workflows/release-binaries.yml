@@ -44,7 +44,7 @@ on:
       release-runner:
         description: "Runner image for the release job (runs the release task)."
         type: string
-        default: "ubuntu-latest"
+        default: "ubuntu-26.04"
       build-task:
         description: "mise task that builds the release binary."
         type: string
@@ -61,14 +61,18 @@ on:
         description: "Build the `darwin-*` targets."
         type: boolean
         default: true
+      linux-extra-packages:
+        description: "Extra apt packages (space-separated) installed on the Linux build runners."
+        type: string
+        default: ""
       targets:
         description: "JSON list of {runner, target, args?, dir?} objects to build."
         type: string
         default: >-
           [{"runner": "macos-latest", "target": "darwin-arm64", "args": "--arch arm64", "dir": ".build/arm64-apple-macosx/release"},
            {"runner": "macos-latest", "target": "darwin-amd64", "args": "--arch x86_64", "dir": ".build/x86_64-apple-macosx/release"},
-           {"runner": "ubuntu-latest", "target": "linux-x86_64"},
-           {"runner": "ubuntu-24.04-arm", "target": "linux-arm64"}]
+           {"runner": "ubuntu-26.04", "target": "linux-x86_64"},
+           {"runner": "ubuntu-26.04-arm", "target": "linux-arm64"}]
     secrets:
       GH_TOKEN:
         description: "Token with `contents: write`. Defaults to GITHUB_TOKEN."
@@ -168,6 +172,7 @@ jobs:
       - uses: amine2233/ci-shared/actions/mise-run@main
         with:
           tasks: ${{ inputs.build-task }} ${{ matrix.args }}
+          linux-extra-packages: ${{ inputs.linux-extra-packages }}
 
       - name: Package and upload
         env:

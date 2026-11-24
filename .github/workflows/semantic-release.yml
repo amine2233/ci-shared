@@ -29,7 +29,7 @@ on:
       runner:
         description: "Runner image for the release job."
         type: string
-        default: "ubuntu-latest"
+        default: "ubuntu-26.04"
     secrets:
       GH_TOKEN:
         description: "Token with `contents: write`. Defaults to GITHUB_TOKEN via secrets: inherit."

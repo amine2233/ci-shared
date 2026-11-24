@@ -20,7 +20,7 @@ on:
       linux-runner:
         description: "GitHub-hosted Linux runner image."
         type: string
-        default: "ubuntu-latest"
+        default: "ubuntu-26.04"
       enable-macos:
         description: "Run tests on macOS."
         type: boolean
@@ -63,6 +63,10 @@ on:
         default: "check_merge_request_title"
       comment-target:
         description: "Target the title-check comment is posted on (default: the pull request number)."
+        type: string
+        default: ""
+      linux-extra-packages:
+        description: "Extra apt packages (space-separated) installed on Linux before the tests, e.g. 'libsqlite3-dev libssl-dev'."
         type: string
         default: ""
 
@@ -119,3 +123,4 @@ jobs:
       - uses: amine2233/ci-shared/actions/mise-run@main
         with:
           tasks: ${{ inputs.test-task }}
+          linux-extra-packages: ${{ inputs.linux-extra-packages }}

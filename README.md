@@ -76,7 +76,7 @@ jobs:
 
 | Input | Default | Description |
 | --- | --- | --- |
-| `macos-runner` / `linux-runner` | `macos-15` / `ubuntu-latest` | Runner images |
+| `macos-runner` / `linux-runner` | `macos-15` / `ubuntu-26.04` | Runner images |
 | `enable-macos` / `enable-linux` / `enable-lint` | `true` | Toggle jobs (lint runs on pull requests only) |
 | `enable-coverage` | `false` | Use `coverage-task` on macOS |
 | `test-task` | `test` | mise task for tests |
@@ -86,9 +86,28 @@ jobs:
 | `title-check-task` | `check_merge_request_title` | mise task for the title check |
 | `title-check-runner` | `ubuntu-24.04` | Runner image for the title check (executor's Linux binary needs `libxml2.so.2`) |
 | `comment-target` | `""` | Comment target (default: the PR number) |
+| `linux-extra-packages` | `""` | Extra apt packages for the Linux job (e.g. `libsqlite3-dev libssl-dev`) |
 
 The title check posts its result as a PR comment, so the calling job needs
 `permissions: pull-requests: write`.
+
+##### Swift on Linux (Ubuntu 26.04)
+
+Linux jobs run on `ubuntu-26.04`. Before `mise install`, the `mise-run` action
+apt-installs the system libraries the swift.org toolchain needs (same list as
+[swiftlang/swift-docker](https://github.com/swiftlang/swift-docker):
+`libcurl4-openssl-dev`, `libxml2-dev`, `libstdc++-15-dev`, `libgcc-15-dev`,
+`libncurses-dev`, `libz3-dev`, `zlib1g-dev`, …). Only missing packages are
+installed. Turn it off with `linux-swift-deps: "false"` on the action; add
+project-specific packages with `linux-extra-packages`.
+
+swift.org publishes Ubuntu 26.04 toolchains from **Swift 6.4** onwards. If your
+`mise.toml` pins `swift` below 6.4 the job fails early with a hint — bump it
+(e.g. `swift = "6.4.3"`) or set `linux-runner: ubuntu-24.04`.
+
+Binaries built on 26.04 link against its glibc and won't run on older distros;
+pass `--static-swift-stdlib` (or the Static Linux SDK) in `build-release`, or
+pin the Linux `targets` to `ubuntu-24.04` if you ship to older systems.
 
 #### Pages
 
@@ -166,7 +185,8 @@ upload.
 | `binary-name` | — (required) | Executable name; also the asset prefix |
 | `tag` | `""` | Attach to this existing tag instead of cutting a release |
 | `release-task` / `release-args` | `release` / `--write-change-log` | Same as Semantic Release |
-| `release-runner` | `ubuntu-latest` | Runner image for the release job (pin e.g. `ubuntu-24.04` if a release tool needs older system libs) |
+| `release-runner` | `ubuntu-26.04` | Runner image for the release job (pin e.g. `ubuntu-24.04` if a release tool needs older system libs) |
+| `linux-extra-packages` | `""` | Extra apt packages for the Linux build runners |
 | `build-task` | `build-release` | mise task building the release binary |
 | `enable-linux` / `enable-macos` | `true` | Toggle the `linux-*` / `darwin-*` targets |
 | `binary-dir` | `.build/release` | Directory the task writes the executable into (matrix `dir` wins) |
