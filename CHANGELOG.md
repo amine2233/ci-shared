@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/amine2233/ci-shared/compare/1.1.1...1.2.0) (2026-11-24)
+
+### Features
+
+* **release-binaries:** add release-runner input ([#7](https://github.com/amine2233/ci-shared/issues/7)) ([0d47bb8](https://github.com/amine2233/ci-shared/commit/0d47bb8619202cdc9ed62a3faffcd72bad05adc4))
+
 ## [1.1.1](https://github.com/amine2233/ci-shared/compare/1.1.0...1.1.1) (2026-10-10)
 
 ### Bug Fixes
