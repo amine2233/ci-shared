@@ -41,6 +41,10 @@ on:
         description: "Extra args appended to the release task."
         type: string
         default: "--write-change-log"
+      release-runner:
+        description: "Runner image for the release job (runs the release task)."
+        type: string
+        default: "ubuntu-latest"
       build-task:
         description: "mise task that builds the release binary."
         type: string
@@ -85,7 +89,7 @@ concurrency:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.release-runner }}
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
       targets: ${{ steps.targets.outputs.json }}

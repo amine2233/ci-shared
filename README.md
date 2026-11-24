@@ -164,6 +164,7 @@ upload.
 | `binary-name` | — (required) | Executable name; also the asset prefix |
 | `tag` | `""` | Attach to this existing tag instead of cutting a release |
 | `release-task` / `release-args` | `release` / `--write-change-log` | Same as Semantic Release |
+| `release-runner` | `ubuntu-latest` | Runner image for the release job (pin e.g. `ubuntu-24.04` if a release tool needs older system libs) |
 | `build-task` | `build-release` | mise task building the release binary |
 | `enable-linux` / `enable-macos` | `true` | Toggle the `linux-*` / `darwin-*` targets |
 | `binary-dir` | `.build/release` | Directory the task writes the executable into (matrix `dir` wins) |
