@@ -19,7 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-26.04, ubuntu-26.04-arm, ubuntu-24.04]
+        # No arm64 runner: executor publishes no linux-arm64 binary.
+        runner: [ubuntu-26.04, ubuntu-24.04]
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
