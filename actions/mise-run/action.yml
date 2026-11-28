@@ -37,6 +37,10 @@ inputs:
     description: "Extra apt packages (space-separated) to install on Linux, e.g. 'libsqlite3-dev libssl-dev'."
     required: false
     default: ""
+  linux-libxml2-compat:
+    description: "On Linux, install libxml2.so.2 (needed by executor's Linux binary) from Ubuntu 24.04 when the runner lacks it, e.g. on Ubuntu 26.04 which only ships libxml2.so.16 ('true'/'false')."
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -94,6 +98,52 @@ runs:
         sudo apt-get -q update
         sudo apt-get -q install -y --no-install-recommends "${missing[@]}"
         echo "::endgroup::"
+
+    - name: Install libxml2.so.2 compatibility library
+      if: ${{ runner.os == 'Linux' && inputs.linux-libxml2-compat == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        if /sbin/ldconfig -p | grep -q 'libxml2\.so\.2 '; then
+          echo "libxml2.so.2 already available."
+          exit 0
+        fi
+        # Ubuntu >= 25.10 ships only libxml2.so.16 (libxml2-16), an incompatible ABI,
+        # so executor fails with "libxml2.so.2: cannot open shared object file".
+        # Install noble's libxml2 (+ its libicu74 dependency) side by side; the
+        # pin keeps every other noble package out.
+        case "$(dpkg --print-architecture)" in
+          amd64|i386) mirror=http://archive.ubuntu.com/ubuntu; security=http://security.ubuntu.com/ubuntu ;;
+          *)          mirror=http://ports.ubuntu.com/ubuntu-ports; security="${mirror}" ;;
+        esac
+        sudo tee /etc/apt/sources.list.d/ci-shared-noble-libxml2.sources >/dev/null <<SRC
+        Types: deb
+        URIs: ${mirror}
+        Suites: noble noble-updates
+        Components: main
+        Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+        Types: deb
+        URIs: ${security}
+        Suites: noble-security
+        Components: main
+        Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+        SRC
+        sudo tee /etc/apt/preferences.d/ci-shared-noble-libxml2 >/dev/null <<'PIN'
+        Package: *
+        Pin: release n=noble
+        Pin-Priority: -1
+
+        Package: libxml2 libicu74
+        Pin: release n=noble
+        Pin-Priority: 500
+        PIN
+        echo "::group::apt-get install libxml2 (noble)"
+        export DEBIAN_FRONTEND=noninteractive
+        sudo apt-get -q update
+        sudo apt-get -q install -y --no-install-recommends libxml2 libicu74
+        echo "::endgroup::"
+        /sbin/ldconfig -p | grep 'libxml2\.so\.2 '
 
     - name: Setup mise
       uses: jdx/mise-action@v2

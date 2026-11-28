@@ -84,7 +84,7 @@ jobs:
 | `lint-task` | `lint` | mise task(s) for the lint job |
 | `enable-title-check` | `false` | Check the PR title on Linux (pull requests only) |
 | `title-check-task` | `check_merge_request_title` | mise task for the title check |
-| `title-check-runner` | `ubuntu-24.04` | Runner image for the title check (executor's Linux binary needs `libxml2.so.2`) |
+| `title-check-runner` | `""` | Runner image for the title check (empty = `linux-runner`) |
 | `comment-target` | `""` | Comment target (default: the PR number) |
 | `linux-extra-packages` | `""` | Extra apt packages for the Linux job (e.g. `libsqlite3-dev libssl-dev`) |
 
@@ -100,6 +100,11 @@ apt-installs the system libraries the swift.org toolchain needs (same list as
 `libncurses-dev`, `libz3-dev`, `zlib1g-dev`, …). Only missing packages are
 installed. Turn it off with `linux-swift-deps: "false"` on the action; add
 project-specific packages with `linux-extra-packages`.
+
+executor's Linux binary links `libxml2.so.2`, which Ubuntu 26.04 no longer ships
+(it has `libxml2.so.16`, a different ABI). When the library is missing, `mise-run`
+installs Ubuntu 24.04's `libxml2` + `libicu74` next to it, with an apt pin that
+keeps every other 24.04 package out. Turn it off with `linux-libxml2-compat: "false"`.
 
 swift.org publishes Ubuntu 26.04 toolchains from **Swift 6.4** onwards. If your
 `mise.toml` pins `swift` below 6.4 the job fails early with a hint — bump it

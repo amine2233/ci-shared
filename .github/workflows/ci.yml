@@ -54,9 +54,9 @@ on:
         type: boolean
         default: false
       title-check-runner:
-        description: "Runner image for the title check (executor's Linux binary needs libxml2.so.2, absent from newer Ubuntu images)."
+        description: "Runner image for the title check (empty = linux-runner)."
         type: string
-        default: "ubuntu-24.04"
+        default: ""
       title-check-task:
         description: "mise task that checks the pull request title."
         type: string
@@ -88,7 +88,7 @@ jobs:
   title-check:
     if: ${{ inputs.enable-title-check && github.event_name == 'pull_request' }}
     name: Merge request title
-    runs-on: ${{ inputs.title-check-runner }}
+    runs-on: ${{ inputs.title-check-runner || inputs.linux-runner }}
     permissions:
       contents: read
       pull-requests: write
