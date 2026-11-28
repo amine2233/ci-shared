@@ -6,7 +6,8 @@ development, consumed from any package repo
 
 **The CI does not re-implement build/test/docs/release scripts.** Every project
 ships a [`mise.toml`](https://mise.jdx.dev) whose tasks already encode that logic
-(via [`executor`](https://github.com/executor-cli/executor)). The shared
+(via [`executor`](https://github.com/executor-cli/executor), and
+[`assay`](https://github.com/executor-cli/assay-cli) for format/lint). The shared
 workflows just install mise and run `mise run <task>`. One source of truth: the
 project's `mise.toml`.
 
