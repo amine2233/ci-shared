@@ -1,3 +1,14 @@
+## [1.3.0](https://github.com/amine2233/ci-shared/compare/1.2.0...1.3.0) (2026-11-28)
+
+### Features
+
+* add ai agent integration guide ([831e93a](https://github.com/amine2233/ci-shared/commit/831e93a5cf03693db8a36658b56e2139dcafbb46))
+* use assay for format and lint tasks ([87dd211](https://github.com/amine2233/ci-shared/commit/87dd2118b261905204a53ede1078fe1d769a8074))
+
+### Bug Fixes
+
+* restore assay linterkit bundle on install ([5e341a4](https://github.com/amine2233/ci-shared/commit/5e341a47346cbe7db5ea4ec0f3e04503d0357bd3))
+
 ## [1.2.0](https://github.com/amine2233/ci-shared/compare/1.1.1...1.2.0) (2026-11-24)
 
 ### Features
