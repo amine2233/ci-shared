@@ -1,0 +1,34 @@
+name: Smoke
+
+# Runs the local mise-run action on every Linux image the shared workflows use,
+# and checks that executor's Linux binary starts (libxml2.so.2 compatibility).
+on:
+  pull_request:
+    paths:
+      - "actions/**"
+      - ".github/smoke/**"
+      - ".github/workflows/smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  executor:
+    name: executor on ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # No arm64 runner: executor publishes no linux-arm64 binary.
+        runner: [ubuntu-26.04, ubuntu-24.04]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./actions/mise-run
+        with:
+          tasks: executor_smoke
+          working-directory: .github/smoke/executor
+          linux-swift-deps: "false"
+          cache: "false"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

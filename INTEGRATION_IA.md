@@ -311,8 +311,8 @@ ruleset, or pass a PAT / GitHub App token from a bypass account:
 - `test-coverage`, `build_documentations` and any `xcodebuild` task need macOS.
 - Lint and title check run only on `pull_request` events.
 - The title check comments on the PR, so the caller job needs `pull-requests: write`.
-- executor's Linux binary links `libxml2.so.2`, missing on newer Ubuntu images (`error while loading shared
-  libraries: libxml2.so.2`). Keep executor jobs on `ubuntu-24.04`: `title-check-runner` (default),
-  `release-runner` / `runner` for releases.
+- executor's Linux binary links `libxml2.so.2`; Ubuntu 26.04 only ships `libxml2.so.16`. `mise-run` installs
+  Ubuntu 24.04's `libxml2` (+ `libicu74`) side by side when the library is missing. Opt out with
+  `linux-libxml2-compat: "false"`.
 - `darwin-amd64` is cross-compiled on Apple Silicon; use `macos-15-intel` in
   `targets` for a native Intel build.

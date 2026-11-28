@@ -1,0 +1,6 @@
+# Used by .github/workflows/smoke.yml only: proves executor runs on each Linux image.
+[tools]
+"github:executor-cli/executor" = "0.28.5"
+
+[tasks.executor_smoke]
+run = ["ldd \"$(command -v executor)\" | grep libxml2", "executor version", "executor check-ci merge-request-title --help"]
