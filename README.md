@@ -50,7 +50,7 @@ tasks. Use it directly when you want your own job/matrix layout.
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: amine2233/ci-shared/actions/mise-run@1.3.1
+- uses: amine2233/ci-shared/actions/mise-run@1.3.2
   with:
     tasks: "test"
 ```
@@ -69,7 +69,7 @@ tasks. Use it directly when you want your own job/matrix layout.
 ```yaml
 jobs:
   ci:
-    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.3.1
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.3.2
     with:
       enable-coverage: false
 ```
@@ -99,7 +99,7 @@ permissions:
   id-token: write
 jobs:
   docs:
-    uses: amine2233/ci-shared/.github/workflows/pages.yml@1.3.1
+    uses: amine2233/ci-shared/.github/workflows/pages.yml@1.3.2
     with:
       main-library-name: CascadeKit
       hosting-base-path: cascade-kit
@@ -122,7 +122,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@1.3.1
+    uses: amine2233/ci-shared/.github/workflows/semantic-release.yml@1.3.2
     secrets: inherit
 ```
 
@@ -146,7 +146,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.3.1
+    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.3.2
     with:
       binary-name: mytool
     secrets: inherit
@@ -232,7 +232,7 @@ The default `GITHUB_TOKEN` (acting as `github-actions[bot]`) **cannot** bypass a
 - Composite actions run *inside the caller's job*, so the job provides the
   runner, `permissions`, and `actions/checkout`.
 - Inside the reusable workflows the action is referenced as
-  `amine2233/ci-shared/actions/mise-run@1.3.1` (not `./actions/...`): a relative
+  `amine2233/ci-shared/actions/mise-run@1.3.2` (not `./actions/...`): a relative
   `uses:` in a reusable workflow resolves against the *caller's* checkout.
 
 ## Releasing ci-shared itself

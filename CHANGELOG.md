@@ -1,3 +1,9 @@
+## [1.3.2](https://github.com/amine2233/ci-shared/compare/1.3.1...1.3.2) (2026-11-28)
+
+### Bug Fixes
+
+* **template:** call executor check-ci merge-request-title ([#9](https://github.com/amine2233/ci-shared/issues/9)) ([9b45f3a](https://github.com/amine2233/ci-shared/commit/9b45f3a34da67fcd8d054ad0e715545d9e789029))
+
 ## [1.3.1](https://github.com/amine2233/ci-shared/compare/1.3.0...1.3.1) (2026-11-28)
 
 ### Bug Fixes

@@ -19,7 +19,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.3.1
+    uses: amine2233/ci-shared/.github/workflows/release-binaries.yml@1.3.2
     with:
       binary-name: mytool
       tag: ${{ inputs.tag }}
