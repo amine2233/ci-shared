@@ -23,7 +23,7 @@ Tools:
 | Tool in `[tools]` | Version | Used by |
 | --- | --- | --- |
 | `github:executor-cli/assay-cli` (`assay`) | 1.1.3 | `format`, `check_code`, `check_documentation` |
-| `github:executor-cli/executor` (`executor`) | 0.27.1 | `test-coverage`, `release`, `check_commit_title`, `check_merge_request_title`, `build_documentations` |
+| `github:executor-cli/executor` (`executor`) | 0.28.5 | `test-coverage`, `release`, `check_commit_title`, `check_merge_request_title`, `build_documentations` |
 
 ## 2. Pick the project type
 
@@ -70,8 +70,20 @@ Format and lint always go through `assay` (subcommand `linter`, **not**
 
 ```toml
 [tools]
-"github:executor-cli/executor" = "0.27.1"
-"github:executor-cli/assay-cli" = "1.1.3"
+"github:executor-cli/executor" = "0.28.5"
+
+# The assay release tarball ships only the binary; `assay linter` needs the
+# LinterKit resource bundle next to it, so postinstall rebuilds it.
+[tools."github:executor-cli/assay-cli"]
+version = "1.1.3"
+postinstall = '''
+bundle="$MISE_TOOL_INSTALL_PATH/assay-cli_LinterKit.bundle"
+mkdir -p "$bundle"
+for file in com.raywenderlich.swiftlint.yml swiftlint-missingdoc.yml lint-missing-docs.sh; do
+    curl -fsSL "https://raw.githubusercontent.com/executor-cli/assay-cli/$MISE_TOOL_VERSION/Sources/LinterKit/Resources/$file" -o "$bundle/$file"
+done
+chmod +x "$bundle/lint-missing-docs.sh"
+'''
 
 [tasks.format]
 run = "assay format ."
@@ -290,6 +302,7 @@ ruleset, or pass a PAT / GitHub App token from a bypass account:
   task body instead.
 - Never rename tasks; if a name must differ, pass it via the input
   (`test-task`, `lint-task`, `coverage-task`, `docs-task`, `release-task`, `build-task`).
+- Keep the assay `postinstall` hook: without the LinterKit bundle `assay linter` aborts.
 - `assay` for format and lint; `executor` for everything else. Never
   `executor linting …`.
 - Pin caller `uses:` to a tag, never `@main`.

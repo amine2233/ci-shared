@@ -7,8 +7,20 @@
 # change task BODIES per project as needed.
 
 [tools]
-"github:executor-cli/executor" = "0.27.1"
-"github:executor-cli/assay-cli" = "1.1.3"
+"github:executor-cli/executor" = "0.28.5"
+
+# The release tarball ships only the binary: `assay linter` aborts without the LinterKit resource bundle,
+# so rebuild it next to the binary from the tagged sources.
+[tools."github:executor-cli/assay-cli"]
+version = "1.1.3"
+postinstall = '''
+bundle="$MISE_TOOL_INSTALL_PATH/assay-cli_LinterKit.bundle"
+mkdir -p "$bundle"
+for file in com.raywenderlich.swiftlint.yml swiftlint-missingdoc.yml lint-missing-docs.sh; do
+    curl -fsSL "https://raw.githubusercontent.com/executor-cli/assay-cli/$MISE_TOOL_VERSION/Sources/LinterKit/Resources/$file" -o "$bundle/$file"
+done
+chmod +x "$bundle/lint-missing-docs.sh"
+'''
 
 [env]
 _.file = ".env.local"
